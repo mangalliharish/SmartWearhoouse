@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "SmartWarehouse"
+version = "1.0.0"
+id = "artifacts/smartwarehouse"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23383
+
+[services.development]
+run = "pnpm --filter @workspace/smartwarehouse run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smartwarehouse", "run", "build" ]
+publicDir = "artifacts/smartwarehouse/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23383"
+BASE_PATH = "/"

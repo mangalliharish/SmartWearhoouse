@@ -1,0 +1,15 @@
+packages:
+  "framer-motion": "For fluid page transitions, layout animations, and stepper interactions"
+  "date-fns": "For elegant date formatting in tables and timelines"
+  "clsx": "For dynamic class merging in custom components"
+  "tailwind-merge": "For resolving Tailwind class conflicts in custom components"
+  "lucide-react": "For crisp, modern SVG icons across the interface"
+
+images:
+  - path: "artifacts/smartwarehouse/public/images/login-bg.png"
+    description: "A minimal, high-end architectural visualization of a modern warehouse exterior at dusk, soft cinematic lighting, deep steel blues and grays"
+    aspect_ratio: "16:9"
+
+notes:
+  - "Using Orval generated hooks from @workspace/api-client-react"
+  - "Authentication is stored in localStorage as 'sw_token' and passed via getAuthHeaders()"

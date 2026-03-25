@@ -1,15 +1,22 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SmartWarehouse API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: orders
+    description: Order operations
+  - name: quotations
+    description: Quotation operations
+  - name: suborders
+    description: Sub-order operations
 paths:
   /healthz:
     get:
@@ -24,6 +31,279 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders:
+    get:
+      operationId: getOrders
+      tags: [orders]
+      summary: Get all orders
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new material order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order by ID
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /quotations:
+    post:
+      operationId: submitQuotation
+      tags: [quotations]
+      summary: Submit a quotation for an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuotationRequest"
+      responses:
+        "201":
+          description: Quotation submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quotation"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /quotations/{orderId}:
+    get:
+      operationId: getQuotations
+      tags: [quotations]
+      summary: Get all quotations for an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of quotations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quotation"
+
+  /orders/{orderId}/allocate:
+    post:
+      operationId: autoAllocate
+      tags: [orders]
+      summary: Auto allocate order to dealers based on quotations
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Allocation result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubOrder"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /suborders/{orderId}:
+    get:
+      operationId: getSubOrders
+      tags: [suborders]
+      summary: Get all sub-orders for an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of sub-orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubOrder"
+
+  /suborders/{subOrderId}/status:
+    patch:
+      operationId: updateSubOrderStatus
+      tags: [suborders]
+      summary: Update sub-order delivery status
+      parameters:
+        - name: subOrderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusRequest"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubOrder"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dealer/suborders:
+    get:
+      operationId: getDealerSubOrders
+      tags: [suborders]
+      summary: Get all sub-orders assigned to current dealer
+      responses:
+        "200":
+          description: List of sub-orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubOrder"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +314,213 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        role:
+          type: string
+          enum: [buyer, dealer, admin]
+      required:
+        - name
+        - email
+        - password
+        - role
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+      required:
+        - token
+        - user
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [buyer, dealer, admin]
+      required:
+        - id
+        - name
+        - email
+        - role
+
+    CreateOrderRequest:
+      type: object
+      properties:
+        material:
+          type: string
+          enum: [cement, steel, sand]
+        totalQty:
+          type: number
+        location:
+          type: string
+        deliveryDate:
+          type: string
+        notes:
+          type: string
+      required:
+        - material
+        - totalQty
+        - location
+        - deliveryDate
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        buyerId:
+          type: string
+        buyerName:
+          type: string
+        material:
+          type: string
+          enum: [cement, steel, sand]
+        totalQty:
+          type: number
+        location:
+          type: string
+        deliveryDate:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [requested, quoted, allocated, dispatched, delivered]
+        createdAt:
+          type: string
+      required:
+        - id
+        - buyerId
+        - material
+        - totalQty
+        - location
+        - deliveryDate
+        - status
+        - createdAt
+
+    CreateQuotationRequest:
+      type: object
+      properties:
+        orderId:
+          type: string
+        pricePerUnit:
+          type: number
+        availableQty:
+          type: number
+        deliveryDate:
+          type: string
+      required:
+        - orderId
+        - pricePerUnit
+        - availableQty
+        - deliveryDate
+
+    Quotation:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        dealerId:
+          type: string
+        dealerName:
+          type: string
+        pricePerUnit:
+          type: number
+        availableQty:
+          type: number
+        deliveryDate:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - orderId
+        - dealerId
+        - pricePerUnit
+        - availableQty
+        - deliveryDate
+        - createdAt
+
+    SubOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        dealerId:
+          type: string
+        dealerName:
+          type: string
+        allocatedQty:
+          type: number
+        pricePerUnit:
+          type: number
+        status:
+          type: string
+          enum: [allocated, dispatched, delivered]
+        material:
+          type: string
+        location:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - orderId
+        - dealerId
+        - allocatedQty
+        - pricePerUnit
+        - status
+        - createdAt
+
+    UpdateStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [dispatched, delivered]
+      required:
+        - status

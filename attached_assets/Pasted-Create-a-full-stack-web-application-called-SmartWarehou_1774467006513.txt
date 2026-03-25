@@ -1,0 +1,178 @@
+Create a full-stack web application called **“SmartWarehouse”**, a construction material procurement system with role-based access and order splitting functionality.
+
+Tech Stack:
+
+* Frontend: React.js (with simple CSS or Tailwind)
+* Backend: Node.js with Express
+* Database: MongoDB (Mongoose)
+
+---
+
+MAIN FEATURES:
+
+1. Authentication System:
+
+* Users can register and login using email and password
+* Role selection during registration: Buyer or Dealer
+* Store role in database
+
+---
+
+2. Buyer Dashboard:
+
+* Form to create material request with fields:
+
+  * Material type (cement, steel, sand)
+  * Quantity
+  * Delivery location
+  * Required delivery date
+  * Notes (optional)
+* Submit request → creates a “Master Order”
+* View list of orders
+* View quotations from dealers
+* View allocation result (split order)
+* Track order status (Requested → Quoted → Allocated → Dispatched → Delivered)
+
+---
+
+3. Dealer Dashboard:
+
+* View all open requests
+* Submit quotation:
+
+  * Price per unit
+  * Available quantity
+  * Delivery date
+* View assigned sub-orders
+* Update delivery status:
+
+  * Dispatched
+  * Delivered
+
+---
+
+4. Admin Dashboard:
+
+* View all orders
+* View all quotations
+* Button: “Auto Allocate Order”
+
+---
+
+5. SPLIT SYSTEM (CORE FEATURE):
+   When admin clicks “Auto Allocate Order”:
+
+* Fetch all quotations for that order
+* Sort dealers by lowest price
+* Allocate quantity based on availability
+* Create sub-orders for each dealer
+* Ensure total allocated = requested quantity
+
+Example:
+If request = 1000 units
+Dealer A (400 units, ₹350)
+Dealer B (300 units, ₹345)
+Dealer C (500 units, ₹360)
+
+System allocates:
+B → 300
+A → 400
+C → 300
+
+Store this in SubOrders collection.
+
+---
+
+6. Database Models:
+
+Users:
+
+* name, email, password, role
+
+Orders (Master Orders):
+
+* buyerId
+* material
+* totalQty
+* location
+* date
+* status
+
+Quotations:
+
+* orderId
+* dealerId
+* pricePerUnit
+* availableQty
+* deliveryDate
+
+SubOrders:
+
+* orderId
+* dealerId
+* allocatedQty
+* status
+
+---
+
+7. APIs to implement:
+
+Auth:
+
+* POST /register
+* POST /login
+
+Orders:
+
+* POST /createOrder
+* GET /orders
+
+Quotations:
+
+* POST /submitQuote
+* GET /quotes/:orderId
+
+Allocation:
+
+* POST /autoAllocate/:orderId
+
+SubOrders:
+
+* GET /suborders/:orderId
+* POST /updateStatus
+
+---
+
+8. Frontend Pages:
+
+* Login/Register Page
+* Buyer Dashboard
+* Dealer Dashboard
+* Admin Dashboard
+* Order Details Page
+* Allocation Result Page
+
+---
+
+9. UI Requirements:
+
+* Clean dashboard layout
+* Tables for orders and quotations
+* Highlight lowest price
+* Show allocation results clearly
+* Order tracking timeline
+
+---
+
+10. Additional Requirements:
+
+* Use REST APIs
+* Use Axios for API calls
+* Use React Router for navigation
+* Keep UI simple but professional
+* No payment integration needed
+
+---
+
+Goal:
+Build a working prototype demonstrating a multi-dealer construction material procurement system with automatic order splitting and tracking.
