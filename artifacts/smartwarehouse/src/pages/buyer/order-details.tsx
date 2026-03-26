@@ -26,7 +26,7 @@ export default function BuyerOrderDetails() {
   if (!order) return <DashboardLayout><p>Order not found</p></DashboardLayout>;
 
   const steps = ['requested', 'quoted', 'allocated', 'dispatched', 'delivered'];
-  const minPrice = quotes && quotes.length > 0 ? Math.min(...quotes.map(q => q.pricePerUnit)) : null;
+  const minPrice = quotes && quotes.length > 0 ? Math.min(...quotes.map(q => parseFloat(String(q.pricePerUnit)))) : null;
 
   return (
     <DashboardLayout>
@@ -124,14 +124,15 @@ export default function BuyerOrderDetails() {
                   </thead>
                   <tbody className="divide-y divide-border/50">
                     {quotes?.map(quote => {
-                      const isLowest = quote.pricePerUnit === minPrice;
+                      const price = parseFloat(String(quote.pricePerUnit));
+                      const isLowest = price === minPrice;
                       return (
                         <tr key={quote.id} className={isLowest ? "bg-green-500/5 dark:bg-green-500/10" : ""}>
                           <td className="px-4 py-4 font-medium text-foreground flex items-center">
                             {quote.dealerName}
                             {isLowest && <Badge variant="outline" className="ml-2 bg-green-100 text-green-700 border-green-200 uppercase text-[10px]">Best Price</Badge>}
                           </td>
-                          <td className="px-4 py-4 font-mono font-semibold">${quote.pricePerUnit.toFixed(2)}</td>
+                          <td className="px-4 py-4 font-mono font-semibold">${price.toFixed(2)}</td>
                           <td className="px-4 py-4">{quote.availableQty} units</td>
                           <td className="px-4 py-4 text-muted-foreground">{format(new Date(quote.deliveryDate), 'MMM d')}</td>
                         </tr>

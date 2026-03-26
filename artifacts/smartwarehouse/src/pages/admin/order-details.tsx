@@ -40,14 +40,14 @@ export default function AdminOrderDetails() {
           toast({ title: "Order successfully auto-allocated." });
         },
         onError: (err: any) => {
-          toast({ title: "Allocation Failed", description: err.response?.data?.error || "Error", variant: "destructive" });
+          toast({ title: "Allocation Failed", description: err.data?.error || "Error", variant: "destructive" });
         }
       }
     );
   };
 
   const steps = ['requested', 'quoted', 'allocated', 'dispatched', 'delivered'];
-  const minPrice = quotes && quotes.length > 0 ? Math.min(...quotes.map(q => q.pricePerUnit)) : null;
+  const minPrice = quotes && quotes.length > 0 ? Math.min(...quotes.map(q => parseFloat(String(q.pricePerUnit)))) : null;
 
   return (
     <DashboardLayout>
@@ -118,7 +118,7 @@ export default function AdminOrderDetails() {
                   </thead>
                   <tbody className="divide-y divide-border/50">
                     {quotes?.map(quote => (
-                      <tr key={quote.id} className={quote.pricePerUnit === minPrice ? "bg-green-500/5 dark:bg-green-500/10" : ""}>
+                      <tr key={quote.id} className={parseFloat(String(quote.pricePerUnit)) === minPrice ? "bg-green-500/5 dark:bg-green-500/10" : ""}>
                         <td className="px-3 py-3 font-medium">{quote.dealerName}</td>
                         <td className="px-3 py-3 font-mono font-semibold">${quote.pricePerUnit}</td>
                         <td className="px-3 py-3 text-muted-foreground">{quote.availableQty}</td>

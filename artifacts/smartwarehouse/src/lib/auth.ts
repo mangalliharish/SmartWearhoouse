@@ -15,7 +15,7 @@ export const getUser = () => {
 };
 export const setUser = (user: any) => localStorage.setItem("sw_user", JSON.stringify(user));
 
-export const getAuthHeaders = () => {
+export const getAuthHeaders = (): Record<string, string> => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
