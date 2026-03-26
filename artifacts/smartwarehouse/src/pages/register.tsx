@@ -33,7 +33,7 @@ export default function Register() {
         onError: (err: any) => {
           toast({
             title: "Registration Failed",
-            description: err.response?.data?.error || "Please check your inputs",
+            description: err.data?.error || err.message || "Please check your inputs",
             variant: "destructive",
           });
         },

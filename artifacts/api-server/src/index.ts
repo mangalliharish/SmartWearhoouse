@@ -1,21 +1,23 @@
-import express from "express";
+import app from "./app";
+import { logger } from "./lib/logger";
 
-const app = express();
+const rawPort = process.env["PORT"];
 
-app.use(express.json());
+if (!rawPort) {
+  throw new Error("PORT environment variable is required but was not provided.");
+}
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("SmartWarehouse running 🚀");
+const port = Number(rawPort);
+
+if (Number.isNaN(port) || port <= 0) {
+  throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+app.listen(port, (err) => {
+  if (err) {
+    logger.error({ err }, "Error listening on port");
+    process.exit(1);
+  }
+
+  logger.info({ port }, "Server listening");
 });
-
-// Port
-const port = Number(process.env.PORT) || 3000;
-
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-// 🔥 KEEP SERVER ALIVE (IMPORTANT FIX)
-setInterval(() => {}, 1000);

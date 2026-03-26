@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
 import { getToken, getUser } from "@/lib/auth";
-
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -14,6 +14,9 @@ import DealerDashboard from "@/pages/dealer/dashboard";
 import DealerSubOrders from "@/pages/dealer/suborders";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminOrderDetails from "@/pages/admin/order-details";
+
+// Wire up auth token so all API calls include the Bearer token automatically
+setAuthTokenGetter(() => getToken());
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,7 +49,7 @@ function ProtectedRoute({ component: Component, role }: { component: any, role: 
 
 function RootRedirect() {
   const [, setLocation] = useLocation();
-  
+
   useEffect(() => {
     const user = getUser();
     if (user?.role) {
@@ -55,7 +58,7 @@ function RootRedirect() {
       setLocation("/login");
     }
   }, [setLocation]);
-  
+
   return null;
 }
 
@@ -65,8 +68,7 @@ function Router() {
       <Route path="/" component={RootRedirect} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      
-      {/* Buyer Routes */}
+
       <Route path="/buyer">
         {() => <ProtectedRoute role="buyer" component={BuyerDashboard} />}
       </Route>
@@ -74,7 +76,6 @@ function Router() {
         {() => <ProtectedRoute role="buyer" component={BuyerOrderDetails} />}
       </Route>
 
-      {/* Dealer Routes */}
       <Route path="/dealer">
         {() => <ProtectedRoute role="dealer" component={DealerDashboard} />}
       </Route>
@@ -82,7 +83,6 @@ function Router() {
         {() => <ProtectedRoute role="dealer" component={DealerSubOrders} />}
       </Route>
 
-      {/* Admin Routes */}
       <Route path="/admin">
         {() => <ProtectedRoute role="admin" component={AdminDashboard} />}
       </Route>
