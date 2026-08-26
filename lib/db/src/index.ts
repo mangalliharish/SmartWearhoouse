@@ -31,21 +31,56 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 
-// Find sql-wasm.wasm dynamically using node module resolution
+// Find sql-wasm.wasm dynamically across all possible runtime paths
 function resolveWasmPath(): string {
-  try {
-    const sqlJsMain = require.resolve("sql.js");
-    const wasm = path.join(path.dirname(sqlJsMain), "sql-wasm.wasm");
-    if (fs.existsSync(wasm)) return wasm;
-  } catch {}
-  return path.join(rootDir, "node_modules", "sql.js", "dist", "sql-wasm.wasm");
+  const candidates = [
+    // 1. Next to bundled output file / in dist
+    path.join(__dirname, "sql-wasm.wasm"),
+    path.join(__dirname, "..", "sql-wasm.wasm"),
+    path.join(process.cwd(), "artifacts", "api-server", "dist", "sql-wasm.wasm"),
+    path.join(process.cwd(), "dist", "sql-wasm.wasm"),
+    // 2. Via require.resolve
+    (() => {
+      try {
+        const p = require.resolve("sql.js");
+        return path.join(path.dirname(p), "sql-wasm.wasm");
+      } catch {
+        return "";
+      }
+    })(),
+    // 3. In .pnpm directory
+    ...(() => {
+      try {
+        const pnpmDir = path.join(rootDir, "node_modules", ".pnpm");
+        if (fs.existsSync(pnpmDir)) {
+          const entries = fs.readdirSync(pnpmDir);
+          const sqlDir = entries.find((e) => e.startsWith("sql.js@"));
+          if (sqlDir) {
+            return [path.join(pnpmDir, sqlDir, "node_modules", "sql.js", "dist", "sql-wasm.wasm")];
+          }
+        }
+      } catch {}
+      return [];
+    })(),
+    path.join(rootDir, "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
+    path.join(process.cwd(), "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
+  ].filter((p): p is string => Boolean(p && fs.existsSync(p)));
+
+  return candidates[0] || path.join(rootDir, "node_modules", "sql.js", "dist", "sql-wasm.wasm");
 }
 
 const wasmPath = resolveWasmPath();
+let wasmBinary: Buffer | undefined;
+try {
+  if (fs.existsSync(wasmPath)) {
+    wasmBinary = fs.readFileSync(wasmPath);
+  }
+} catch {}
 
-// Initialize sql.js (WASM) and create/load the database synchronously at module load.
+// Initialize sql.js (WASM) with preloaded binary buffer
 const SQL = await initSqlJs({
   locateFile: () => wasmPath,
+  ...(wasmBinary ? { wasmBinary } : {}),
 });
 
 export let sqlJsDb: InstanceType<typeof SQL.Database>;
