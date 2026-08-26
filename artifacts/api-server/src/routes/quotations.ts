@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, quotationsTable, usersTable, ordersTable } from "@workspace/db";
+import { db, quotationsTable, usersTable, ordersTable, saveDb } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { authenticateToken, requireRole, type AuthRequest } from "../middlewares/auth.js";
 
@@ -30,8 +30,8 @@ router.post("/", authenticateToken, requireRole("dealer"), async (req: AuthReque
       .values({
         orderId,
         dealerId: req.userId!,
-        pricePerUnit: String(pricePerUnit),
-        availableQty: String(availableQty),
+        pricePerUnit: Number(pricePerUnit),
+        availableQty: Number(availableQty),
         deliveryDate,
       })
       .returning();
@@ -47,14 +47,16 @@ router.post("/", authenticateToken, requireRole("dealer"), async (req: AuthReque
       .set({ status: "quoted" })
       .where(eq(ordersTable.id, orderId));
 
+    saveDb();
+
     res.status(201).json({ ...quotation, dealerName: dealer[0]?.name || "" });
   } catch (err) {
     req.log.error({ err }, "Submit quotation error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 router.get("/:orderId", authenticateToken, async (req: AuthRequest, res) => {
+  const orderId = String(req.params.orderId);
   try {
     const quotations = await db
       .select({
@@ -69,7 +71,7 @@ router.get("/:orderId", authenticateToken, async (req: AuthRequest, res) => {
       })
       .from(quotationsTable)
       .leftJoin(usersTable, eq(quotationsTable.dealerId, usersTable.id))
-      .where(eq(quotationsTable.orderId, req.params.orderId));
+      .where(eq(quotationsTable.orderId, orderId));
 
     res.json(quotations);
   } catch (err) {

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, ordersTable, usersTable, quotationsTable, subOrdersTable } from "@workspace/db";
+import { db, ordersTable, usersTable, quotationsTable, subOrdersTable, saveDb } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { authenticateToken, requireRole, type AuthRequest } from "../middlewares/auth.js";
 
@@ -55,12 +55,14 @@ router.post("/", authenticateToken, requireRole("buyer"), async (req: AuthReques
       .values({
         buyerId: req.userId!,
         material,
-        totalQty: String(totalQty),
+        totalQty: Number(totalQty),
         location,
         deliveryDate,
         notes: notes || null,
       })
       .returning();
+
+    saveDb();
 
     const buyer = await db
       .select({ name: usersTable.name })
@@ -76,6 +78,7 @@ router.post("/", authenticateToken, requireRole("buyer"), async (req: AuthReques
 });
 
 router.get("/:orderId", authenticateToken, async (req: AuthRequest, res) => {
+  const orderId = String(req.params.orderId);
   try {
     const [order] = await db
       .select({
@@ -92,7 +95,7 @@ router.get("/:orderId", authenticateToken, async (req: AuthRequest, res) => {
       })
       .from(ordersTable)
       .leftJoin(usersTable, eq(ordersTable.buyerId, usersTable.id))
-      .where(eq(ordersTable.id, req.params.orderId))
+      .where(eq(ordersTable.id, orderId))
       .limit(1);
 
     if (!order) {
@@ -112,7 +115,7 @@ router.post(
   authenticateToken,
   requireRole("admin"),
   async (req: AuthRequest, res) => {
-    const { orderId } = req.params;
+    const orderId = String(req.params.orderId);
 
     try {
       const [order] = await db
@@ -144,10 +147,10 @@ router.post(
       }
 
       const sorted = [...quotations].sort(
-        (a, b) => parseFloat(a.pricePerUnit) - parseFloat(b.pricePerUnit)
+        (a, b) => Number(a.pricePerUnit) - Number(b.pricePerUnit)
       );
 
-      let remaining = parseFloat(order.totalQty);
+      let remaining = Number(order.totalQty);
       const allocations: {
         dealerId: string;
         dealerName: string | null;
@@ -157,13 +160,13 @@ router.post(
 
       for (const q of sorted) {
         if (remaining <= 0) break;
-        const available = parseFloat(q.availableQty);
+        const available = Number(q.availableQty);
         const allocated = Math.min(available, remaining);
         allocations.push({
           dealerId: q.dealerId,
           dealerName: q.dealerName,
           allocatedQty: allocated,
-          pricePerUnit: parseFloat(q.pricePerUnit),
+          pricePerUnit: Number(q.pricePerUnit),
         });
         remaining -= allocated;
       }
@@ -183,8 +186,8 @@ router.post(
           allocations.map((a) => ({
             orderId,
             dealerId: a.dealerId,
-            allocatedQty: String(a.allocatedQty),
-            pricePerUnit: String(a.pricePerUnit),
+            allocatedQty: a.allocatedQty,
+            pricePerUnit: a.pricePerUnit,
           }))
         )
         .returning();
@@ -194,7 +197,9 @@ router.post(
         .set({ status: "allocated" })
         .where(eq(ordersTable.id, orderId));
 
-      const enriched = subOrders.map((so, i) => ({
+      saveDb();
+
+      const enriched = subOrders.map((so: any, i: number) => ({
         ...so,
         dealerName: allocations[i].dealerName,
         material: order.material,

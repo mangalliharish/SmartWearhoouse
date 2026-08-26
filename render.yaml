@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: smartwarehouse
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: pnpm install && pnpm run build && pnpm run seed
+    startCommand: pnpm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: ./db.sqlite

@@ -47,3 +47,16 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local editor / npm config
+.config/
+
+# Environment files
+.env
+
+# Database and agents
+db.sqlite
+*.sqlite
+*.sqlite-journal
+.agents/
+

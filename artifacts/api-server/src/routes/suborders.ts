@@ -1,11 +1,12 @@
 import { Router, type IRouter } from "express";
-import { db, subOrdersTable, usersTable, ordersTable } from "@workspace/db";
+import { db, subOrdersTable, usersTable, ordersTable, saveDb } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { authenticateToken, requireRole, type AuthRequest } from "../middlewares/auth.js";
 
 const router: IRouter = Router();
 
 router.get("/:orderId", authenticateToken, async (req: AuthRequest, res) => {
+  const orderId = String(req.params.orderId);
   try {
     const subOrders = await db
       .select({
@@ -23,7 +24,7 @@ router.get("/:orderId", authenticateToken, async (req: AuthRequest, res) => {
       .from(subOrdersTable)
       .leftJoin(usersTable, eq(subOrdersTable.dealerId, usersTable.id))
       .leftJoin(ordersTable, eq(subOrdersTable.orderId, ordersTable.id))
-      .where(eq(subOrdersTable.orderId, req.params.orderId));
+      .where(eq(subOrdersTable.orderId, orderId));
 
     res.json(subOrders);
   } catch (err) {
@@ -37,7 +38,7 @@ router.patch(
   authenticateToken,
   requireRole("dealer"),
   async (req: AuthRequest, res) => {
-    const { subOrderId } = req.params;
+    const subOrderId = String(req.params.subOrderId);
     const { status } = req.body;
 
     if (!status || !["dispatched", "delivered"].includes(status)) {
@@ -112,6 +113,8 @@ router.patch(
           .set({ status: "dispatched" })
           .where(eq(ordersTable.id, updated.orderId));
       }
+
+      saveDb();
 
       res.json({
         ...updated,

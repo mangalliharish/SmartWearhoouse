@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, saveDb } from "@workspace/db";
 import { generateToken, type AuthRequest, authenticateToken } from "../middlewares/auth.js";
 
 const router: IRouter = Router();
@@ -9,6 +9,8 @@ const router: IRouter = Router();
 // ================= REGISTER =================
 router.post("/register", async (req, res) => {
   const { name, email, password, role } = req.body;
+
+  req.log.info({ email, role }, "Register request received");
 
   if (!name || !email || !password || !role) {
     return res.status(400).json({ error: "All fields are required" });
@@ -36,6 +38,8 @@ router.post("/register", async (req, res) => {
       .values({ name, email, passwordHash, role })
       .returning();
 
+    saveDb();
+
     const token = generateToken(newUser.id, newUser.role);
 
     return res.status(201).json({
@@ -49,6 +53,7 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Register error");
+    console.error("Register error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -56,6 +61,8 @@ router.post("/register", async (req, res) => {
 // ================= LOGIN =================
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
+
+  req.log.info({ email }, "Login request received");
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
@@ -91,6 +98,7 @@ router.post("/login", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Login error");
+    console.error("Login error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

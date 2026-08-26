@@ -1,0 +1,8 @@
+node_modules
+.git
+.agents
+.cache
+.local
+*.log
+dist
+db.sqlite-journal

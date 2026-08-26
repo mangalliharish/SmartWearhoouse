@@ -1,15 +1,15 @@
-import { pgTable, text, numeric, timestamp } from "drizzle-orm/pg-core";
+import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const quotationsTable = pgTable("quotations", {
+export const quotationsTable = sqliteTable("quotations", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   orderId: text("order_id").notNull(),
   dealerId: text("dealer_id").notNull(),
-  pricePerUnit: numeric("price_per_unit", { precision: 12, scale: 2 }).notNull(),
-  availableQty: numeric("available_qty", { precision: 12, scale: 2 }).notNull(),
+  pricePerUnit: real("price_per_unit").notNull(),
+  availableQty: real("available_qty").notNull(),
   deliveryDate: text("delivery_date").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow().notNull(),
 });
 
 export const insertQuotationSchema = createInsertSchema(quotationsTable).omit({

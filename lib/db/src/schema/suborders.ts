@@ -1,17 +1,17 @@
-import { pgTable, text, numeric, timestamp } from "drizzle-orm/pg-core";
+import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const subOrdersTable = pgTable("sub_orders", {
+export const subOrdersTable = sqliteTable("sub_orders", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   orderId: text("order_id").notNull(),
   dealerId: text("dealer_id").notNull(),
-  allocatedQty: numeric("allocated_qty", { precision: 12, scale: 2 }).notNull(),
-  pricePerUnit: numeric("price_per_unit", { precision: 12, scale: 2 }).notNull(),
+  allocatedQty: real("allocated_qty").notNull(),
+  pricePerUnit: real("price_per_unit").notNull(),
   status: text("status", { enum: ["allocated", "dispatched", "delivered"] })
     .notNull()
     .default("allocated"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow().notNull(),
 });
 
 export const insertSubOrderSchema = createInsertSchema(subOrdersTable).omit({
