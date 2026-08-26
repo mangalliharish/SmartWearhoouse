@@ -1,5 +1,5 @@
 # Stage 1: Build Frontend & Backend
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
 COPY . .
 
 # Install dependencies across all workspace packages
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Build project references, backend and frontend
 RUN pnpm run build
@@ -19,7 +19,7 @@ RUN pnpm run build
 RUN pnpm run seed
 
 # Stage 2: Production Runtime
-FROM node:22-alpine AS runner
+FROM node:22-slim AS runner
 
 WORKDIR /app
 
