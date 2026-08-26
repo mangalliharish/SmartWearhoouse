@@ -6,20 +6,11 @@ WORKDIR /app
 # Enable pnpm
 RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
 
-# Copy monorepo dependency definitions
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json tsconfig.json ./
-COPY lib/db/package.json ./lib/db/
-COPY artifacts/api-server/package.json ./artifacts/api-server/
-COPY artifacts/smartwarehouse/package.json ./artifacts/smartwarehouse/
-COPY scripts/package.json ./scripts/
+# Copy all source files (excluding .dockerignore)
+COPY . .
 
-# Install dependencies
+# Install dependencies across all workspace packages
 RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY lib/ ./lib/
-COPY artifacts/ ./artifacts/
-COPY scripts/ ./scripts/
 
 # Build project references, backend and frontend
 RUN pnpm run build
